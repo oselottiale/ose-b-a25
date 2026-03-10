@@ -1,0 +1,49 @@
+<!doctype html>
+<head>
+  <link rel="stylesheet" href="https://dev.oseale.com/css/color-ldr.css">
+  <style>
+    body {
+      background-color: black;
+    }
+    .ldr {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .hexagon, .ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); 
+      margin: 0;
+      padding: 0;
+  }
+  </style>
+</head>
+<body>
+  <div class="ldr" style="position: relative;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.6s ease, visibility 0.6s;">
+      <svg class="hexagon" viewBox="0 0 50 50">
+          <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
+      </svg>
+      <svg class="ring" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="22"></circle>
+      </svg>
+  </div>
+</body>
+</html>
