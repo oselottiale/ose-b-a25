@@ -18,6 +18,19 @@
       z-index: 9999;
     }
 
+    .ldr-right {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0px;
+      height: 0px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
     .hexagon, .ring {
       position: absolute;
       top: 50%;
@@ -48,6 +61,14 @@
   <h1>oseale ui test</h1>
   <div class="card"><h1>kortti</h1></div>
   <div class="ldr">
+      <svg class="hexagon" viewBox="0 0 50 50">
+          <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
+      </svg>
+      <svg class="ring" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="22"></circle>
+      </svg>
+  </div>
+  <div class="ldr-right">
       <svg class="hexagon" viewBox="0 0 50 50">
           <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
       </svg>
