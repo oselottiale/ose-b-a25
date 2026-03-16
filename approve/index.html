@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://dev.oseale.com/css/color-ldr.css">
+
+    <link rel="icon" href="https://dev.oseale.com/images/favicon.png?v=2" type="image/png">
+  <meta charset="UTF-8">
+  <title>Moderointi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .msg {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    .text {
+    white-space: pre-wrap;
+    font-size: 1.1rem;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    }
+
+    .ldr {
+        width: 100px;  
+      height: 100px;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+      top: calc(50vh - 50px);
+      right: calc(50vw - 50px);
+      opacity: 1;  
+      visibility: visible;  
+      position: fixed !important;
+    }
+
+    .box {
+        visibility: hidden;
+        width: calc(100vw - 40px);
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 500px;
+        border: 4px solid gray;
+        z-index: 9999;
+    }
+    
+    .logo {
+        align-items: center;
+    }
+
+    .footer {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #777;
+    }
+    
+    button {
+      padding: 6px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .approve {
+      background: #4CAF50;
+      color: white;
+    }
+    .reject {
+      background: #d9534f;
+      color: white;
+    }
+  </style>
+</head>
+
+
+
+<body>
+    <body>
+    <div class="ldr">
+      <svg class="hexagon" viewBox="0 0 50 50">
+          <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
+      </svg>
+      
+      <svg class="ring" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="22"></circle>
+      </svg>
+  </div>
+<div class="box" id="box">
+
+  <h1>Moderointi</h1>
+  <div id="list">Ladataan...</div>
+  <div class="footer">&copy <span id="year"></span> Oseale.</div>
+</div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEGOD0jJF4eGtEF_m7eS6QpmsF6UYU0Fi3-QIR-vaB_abhRpGvhjWpW4FZFlbHUu44Ug/exec";
+
+    async function loadPending() {
+      const list = document.getElementById("list");
+      list.textContent = "Ladataan...";
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?d=pending`);
+        const data = await res.json();
+
+        if (!data.pending || data.pending.length === 0) {
+          list.textContent = "Ei odottavia viestejä.";
+          return;
+        }
+
+        list.innerHTML = "";
+
+        data.pending.forEach(item => {
+          const box = document.createElement("div");
+          box.className = "msg";
+
+          box.innerHTML = `
+            <div class="meta">Rivi: ${item.row} — ${item.timestamp}</div>
+            <div class="text">${item.message}</div>
+            <button class="approve" onclick="approve(${item.row})">Hyväksy</button>
+            <button class="reject" onclick="reject(${item.row})">Hylkää</button>
+          `;
+
+          list.appendChild(box);
+        });
+
+      } catch (err) {
+        list.textContent = "Virhe ladattaessa viestejä.";
+      }
+    }
+
+    async function approve(row) {
+      await fetch(`${SCRIPT_URL}?d=modify&row=${row}&col=2&value=Yes`);
+      loadPending();
+    }
+
+    async function reject(row) {
+      await fetch(`${SCRIPT_URL}?d=modify&row=${row}&col=2&value=Rejected`);
+      loadPending();
+    }
+
+    loadPending();
+  </script>
+  <script>
+    const yearSpan = document.getElementById('year');
+    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
