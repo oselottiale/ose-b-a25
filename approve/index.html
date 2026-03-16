@@ -127,6 +127,7 @@
 </div>
 
 <div class="box" id="box">
+    <img src="https://dev.oseale.com/oseale-logo.png" width="100px" height="100px">
     <h1>Moderointi</h1>
     <div id="list">Ladataan...</div>
     <a href="https://t4.oseale.com/linktree.html"><button class="back">Takaisin</button></a>
@@ -147,32 +148,31 @@
             const res = await fetch(`${SCRIPT_URL}?d=pending`);
             const data = await res.json();
 
-            // Hide loader + show content
             loader.style.display = "none";
             box.style.visibility = "visible";
 
-            if (!data.pending || data.pending.length === 0) {
+            const filtered = (data.pending || []).filter(item => item.approved !== "Rejected");
+
+            if (filtered.length === 0) {
                 list.textContent = "Ei odottavia viestejä.";
                 return;
             }
 
             list.innerHTML = "";
 
-            data.pending
-                .filter(item => item.approved !== "Rejected")
-                .forEach(item => {
-                    const box = document.createElement("div");
-                    box.className = "msg";
+            filtered.forEach(item => {
+                const box = document.createElement("div");
+                box.className = "msg";
 
-                    box.innerHTML = `
-                        <div class="meta">Rivi: ${item.row} — ${item.timestamp}</div>
-                        <div class="text">${item.message}</div>
-                        <button class="approve" onclick="approve(${item.row})">Hyväksy</button>
-                        <button class="reject" onclick="reject(${item.row})">Hylkää</button>
-                    `;
+                box.innerHTML = `
+                    <div class="meta">Rivi: ${item.row} — ${item.timestamp}</div>
+                    <div class="text">${item.message}</div>
+                    <button class="approve" onclick="approve(${item.row})">Hyväksy</button>
+                    <button class="reject" onclick="reject(${item.row})">Hylkää</button>
+                `;
 
-                    list.appendChild(box);
-                });
+                list.appendChild(box);
+            });
 
         } catch (err) {
             list.textContent = "Virhe ladattaessa viestejä.";
