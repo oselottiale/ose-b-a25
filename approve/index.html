@@ -53,7 +53,7 @@
         }
 
         .box {
-            visibility: hidden; /* HIDDEN UNTIL LOADED */
+            visibility: hidden; 
             width: calc(100vw - 40px);
             background: #fff;
             padding: 40px;
@@ -89,6 +89,25 @@
             background: #d9534f;
             color: white;
         }
+
+        button {
+        width: 100%;
+        height: 60px;
+        padding: 12px;
+        background-color: white;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        margin-bottom: 8px;
+        margin-top: 2px;
+        border: 4px solid gray;
+        }
+
+        button:hover {
+        background-color: #f5f5f5;
+        }
     </style>
 </head>
 
@@ -106,6 +125,7 @@
 <div class="box" id="box">
     <h1>Moderointi</h1>
     <div id="list">Ladataan...</div>
+    <a href="https://t4.oseale.com/linktree.html"><button>Takaisin</button></a>
     <div class="footer">&copy <span id="year"></span> Oseale.</div>
 </div>
 
@@ -135,7 +155,7 @@
             list.innerHTML = "";
 
             data.pending
-                .filter(item => item.approved !== "Rejected") // ⭐ IGNORE REJECTED
+                .filter(item => item.approved !== "Rejected")
                 .forEach(item => {
                     const box = document.createElement("div");
                     box.className = "msg";
