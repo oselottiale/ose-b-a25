@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lähetä viesti</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      font-size: 1rem;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      width: 100%;
+      margin-top: 10px;
+    }
+    #status { margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <h1>Lähetä viesti</h1>
+
+  <textarea id="message" placeholder="Kirjoita viesti..."></textarea>
+  <button onclick="sendMessage()">Lähetä</button>
+
+  <div id="status"></div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEGOD0jJF4eGtEF_m7eS6QpmsF6UYU0Fi3-QIR-vaB_abhRpGvhjWpW4FZFlbHUu44Ug/exec";
+
+    async function sendMessage() {
+      const message = encodeURIComponent(document.getElementById("message").value);
+      const status = document.getElementById("status");
+
+      if (!message) {
+        status.textContent = "Kirjoita viesti ensin.";
+        return;
+      }
+
+      status.textContent = "Lähetetään...";
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?d=post&message=${message}`);
+        const data = await res.json();
+
+        if (data.success) {
+          status.textContent = "Viesti lähetetty tarkistettavaksi.";
+          document.getElementById("message").value = "";
+        } else {
+          status.textContent = "Virhe lähetyksessä.";
+        }
+      } catch {
+        status.textContent = "Virhe yhteydessä palvelimeen.";
+      }
+    }
+  </script>
+
+</body>
+</html>
