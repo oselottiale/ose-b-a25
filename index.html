@@ -1,4 +1,5 @@
 <!doctype html>
+<html>
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="https://dev.oseale.com/css/color-ldr.css">
@@ -91,23 +92,28 @@
       left: 0;
       will-change: transform;
       opacity: 0;
-      transform: translateX(100vw); /* start fully off-screen right */
+      transform: translateX(100vw);
+      white-space: nowrap;
     }
 
     /* INNER WRAPPER — marquee only */
     #marquee-wrapper {
+      position: relative;
       display: flex;
       flex-direction: row;
       align-items: flex-start;
-      gap: 80px; /* spacing between columns */
-      will-change: transform;
+      gap: 80px;
+      left: 0;
+      will-change: left;
+      white-space: nowrap;
     }
 
     /* Column */
     .column {
-      display: flex;
+      display: inline-flex;
       flex-direction: column;
-      gap: 40px; /* S2 spacing */
+      gap: 40px;
+      white-space: normal;
     }
 
     /* Message styling */
@@ -123,16 +129,18 @@
       font-family: Arial, Helvetica, sans-serif;
       color: black;
       display: inline-block;
-      width: auto;       /* W1 natural width */
-      max-width: 45vw;   /* prevents overly wide messages */
+      width: auto;
+      max-width: 45vw;
     }
 
-    @keyframes scrollRightToLeft {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(-1 * var(--distance))); }
+    /* Sprint-proof marquee animation using left: */
+    @keyframes marqueeLeft {
+      from { left: 0; }
+      to   { left: calc(-1 * var(--distance)); }
     }
   </style>
 </head>
+
 <body>
 
   <div class="card">
@@ -173,106 +181,108 @@
   </div>
 
   <script>
-  let firstLoad = true;
-  
-  async function loadMessages() {
-    const bigLoader = document.querySelector(".ldr");
-    const smallLoader = document.querySelector(".ldr-right");
-    const slide = document.getElementById("slide-wrapper");
-    const marquee = document.getElementById("marquee-wrapper");
-    const container = document.getElementById("message-container");
-  
-    if (firstLoad) {
-      bigLoader.style.display = "flex";
-      smallLoader.style.display = "none";
-    } else {
-      smallLoader.style.display = "flex";
-    }
-  
-    const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
-    const data = await res.json();
-  
-    /* Reset wrappers */
-    marquee.innerHTML = "";
-    marquee.style.animation = "none";
-    marquee.style.left = "0px";   // ← marquee uses left, not transform
-    slide.style.transition = "none";
-    slide.style.opacity = "0";
-    slide.style.transform = "translateX(100vw)";
-  
-    /* Build auto-filled columns */
-    let currentColumn = document.createElement("div");
-    currentColumn.className = "column";
-    marquee.appendChild(currentColumn);
-  
-    let currentHeight = 0;
-    const maxHeight = container.clientHeight;
-  
-    data.approved.slice().reverse().forEach(row => {
-      const msg = document.createElement("div");
-      msg.className = "msg";
-      msg.textContent = row[0];
-  
-      marquee.appendChild(msg);
-      const msgHeight = msg.offsetHeight + 40;
-      marquee.removeChild(msg);
-  
-      if (currentHeight + msgHeight > maxHeight) {
-        currentColumn = document.createElement("div");
-        currentColumn.className = "column";
-        marquee.appendChild(currentColumn);
-        currentHeight = 0;
-      }
-  
-      currentColumn.appendChild(msg);
-      currentHeight += msgHeight;
-    });
-  
-    /* Force layout */
-    void slide.offsetWidth;
-  
-    /* Freeze width */
-    slide.style.width = marquee.scrollWidth + "px";
-  
-    /* Slide-in animation */
-    slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
-    requestAnimationFrame(() => {
-      slide.style.transform = "translateX(0)";
-      slide.style.opacity = "1";
-    });
-  
-    /* Start marquee AFTER slide-in finishes */
-    slide.addEventListener("transitionend", () => {
-      startScroll();
-    }, { once: true });
-  
-    if (firstLoad) {
-      bigLoader.remove();
-      firstLoad = false;
-    }
-  
-    smallLoader.style.display = "none";
-  }
-  
-  function startScroll() {
-    const marquee = document.getElementById("marquee-wrapper");
-    const container = document.getElementById("message-container");
-  
-    const stripWidth = marquee.scrollWidth;
-    const containerWidth = container.clientWidth;
-    const distance = stripWidth + containerWidth;
-  
-    const speed = 40; // adjust as needed
-    const duration = distance / speed;
-  
-    marquee.style.left = "0px";
-  
-    marquee.style.animation = `marqueeLeft ${duration}s linear infinite`;
-  }
-  
-  loadMessages();
-  setInterval(loadMessages, 30000);
+    let firstLoad = true;
 
+    async function loadMessages() {
+      const bigLoader = document.querySelector(".ldr");
+      const smallLoader = document.querySelector(".ldr-right");
+      const slide = document.getElementById("slide-wrapper");
+      const marquee = document.getElementById("marquee-wrapper");
+      const container = document.getElementById("message-container");
+
+      if (firstLoad) {
+        bigLoader.style.display = "flex";
+        smallLoader.style.display = "none";
+      } else {
+        smallLoader.style.display = "flex";
+      }
+
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
+      const data = await res.json();
+
+      /* Reset wrappers */
+      marquee.innerHTML = "";
+      marquee.style.animation = "none";
+      marquee.style.left = "0px";
+      slide.style.transition = "none";
+      slide.style.opacity = "0";
+      slide.style.transform = "translateX(100vw)";
+
+      /* Build auto-filled columns */
+      let currentColumn = document.createElement("div");
+      currentColumn.className = "column";
+      marquee.appendChild(currentColumn);
+
+      let currentHeight = 0;
+      const maxHeight = container.clientHeight;
+
+      data.approved.slice().reverse().forEach(row => {
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.textContent = row[0];
+
+        marquee.appendChild(msg);
+        const msgHeight = msg.offsetHeight + 40;
+        marquee.removeChild(msg);
+
+        if (currentHeight + msgHeight > maxHeight) {
+          currentColumn = document.createElement("div");
+          currentColumn.className = "column";
+          marquee.appendChild(currentColumn);
+          currentHeight = 0;
+        }
+
+        currentColumn.appendChild(msg);
+        currentHeight += msgHeight;
+      });
+
+      /* Force layout */
+      void slide.offsetWidth;
+
+      /* Freeze width */
+      slide.style.width = marquee.scrollWidth + "px";
+
+      /* Slide-in animation */
+      slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
+      requestAnimationFrame(() => {
+        slide.style.transform = "translateX(0)";
+        slide.style.opacity = "1";
+      });
+
+      /* Start marquee AFTER slide-in finishes */
+      slide.addEventListener("transitionend", () => {
+        startScroll();
+      }, { once: true });
+
+      if (firstLoad) {
+        bigLoader.remove();
+        firstLoad = false;
+      }
+
+      smallLoader.style.display = "none";
+    }
+
+    function startScroll() {
+      const marquee = document.getElementById("marquee-wrapper");
+      const container = document.getElementById("message-container");
+
+      const stripWidth = marquee.scrollWidth;
+      const containerWidth = container.clientWidth;
+      const distance = stripWidth + containerWidth;
+
+      const speed = 40; /* adjust if needed */
+      const duration = distance / speed;
+
+      marquee.style.setProperty("--distance", `${distance}px`);
+
+      /* Force layout BEFORE applying animation */
+      void marquee.offsetWidth;
+
+      marquee.style.animation = `marqueeLeft ${duration}s linear infinite`;
+    }
+
+    loadMessages();
+    setInterval(loadMessages, 30000);
   </script>
 
 </body>
