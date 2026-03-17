@@ -6,7 +6,6 @@
   <style>
     body { background-color: white; margin: 0; overflow: hidden; }
 
-    /* Loaders */
     .ldr, .ldr-right {
       position: fixed;
       width: 100px;
@@ -25,7 +24,6 @@
       transform: translate(-50%, -50%);
     }
 
-    /* Header cards */
     .card, .card2 {
       display: flex;
       height: clamp(130px, 25vh, 180px);
@@ -74,7 +72,6 @@
       font-size: clamp(1rem, 400%, 2.5rem);
     }
 
-    /* Message viewport */
     #message-container {
       position: fixed;
       bottom: 0;
@@ -85,30 +82,26 @@
       padding: 20px 0;
     }
 
-    /* OUTER WRAPPER — slide-in only */
     #slide-wrapper {
       position: absolute;
       top: 0;
       left: 0;
-      will-change: transform;
       opacity: 0;
       transform: translateX(100vw);
       white-space: nowrap;
+      will-change: transform;
     }
 
-    /* INNER WRAPPER — marquee only */
     #marquee-wrapper {
-      position: relative;
+      position: absolute;
+      top: 0;
+      left: 0;
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
       gap: 80px;
-      left: 0;
-      will-change: left;
       white-space: nowrap;
     }
 
-    /* Column */
     .column {
       display: inline-flex;
       flex-direction: column;
@@ -116,7 +109,6 @@
       white-space: normal;
     }
 
-    /* Message styling */
     .msg {
       padding: 20px;
       border: 3px solid black;
@@ -131,12 +123,6 @@
       display: inline-block;
       width: auto;
       max-width: 45vw;
-    }
-
-    /* Sprint-proof marquee animation using left: */
-    @keyframes marqueeLeft {
-      from { left: 0; }
-      to   { left: calc(-1 * var(--distance)); }
     }
   </style>
 </head>
@@ -182,6 +168,8 @@
 
   <script>
     let firstLoad = true;
+    let marqueeX = 0;
+    let marqueeSpeed = 0.3; // pixels per frame (~18px/sec at 60fps)
 
     async function loadMessages() {
       const bigLoader = document.querySelector(".ldr");
@@ -192,7 +180,6 @@
 
       if (firstLoad) {
         bigLoader.style.display = "flex";
-        smallLoader.style.display = "none";
       } else {
         smallLoader.style.display = "flex";
       }
@@ -200,15 +187,14 @@
       const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
       const data = await res.json();
 
-      /* Reset wrappers */
       marquee.innerHTML = "";
-      marquee.style.animation = "none";
       marquee.style.left = "0px";
+      marqueeX = 0;
+
       slide.style.transition = "none";
       slide.style.opacity = "0";
       slide.style.transform = "translateX(100vw)";
 
-      /* Build auto-filled columns */
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       marquee.appendChild(currentColumn);
@@ -236,22 +222,18 @@
         currentHeight += msgHeight;
       });
 
-      /* Force layout */
       void slide.offsetWidth;
 
-      /* Freeze width */
       slide.style.width = marquee.scrollWidth + "px";
 
-      /* Slide-in animation */
       slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         slide.style.transform = "translateX(0)";
         slide.style.opacity = "1";
       });
 
-      /* Start marquee AFTER slide-in finishes */
       slide.addEventListener("transitionend", () => {
-        startScroll();
+        requestAnimationFrame(stepMarquee);
       }, { once: true });
 
       if (firstLoad) {
@@ -262,23 +244,22 @@
       smallLoader.style.display = "none";
     }
 
-    function startScroll() {
+    function stepMarquee() {
       const marquee = document.getElementById("marquee-wrapper");
       const container = document.getElementById("message-container");
 
-      const stripWidth = marquee.scrollWidth;
+      marqueeX -= marqueeSpeed;
+
+      const totalWidth = marquee.scrollWidth;
       const containerWidth = container.clientWidth;
-      const distance = stripWidth + containerWidth;
 
-      const speed = 40; /* adjust if needed */
-      const duration = distance / speed;
+      if (marqueeX <= -totalWidth) {
+        marqueeX = containerWidth;
+      }
 
-      marquee.style.setProperty("--distance", `${distance}px`);
+      marquee.style.left = marqueeX + "px";
 
-      /* Force layout BEFORE applying animation */
-      void marquee.offsetWidth;
-
-      marquee.style.animation = `marqueeLeft ${duration}s linear infinite`;
+      requestAnimationFrame(stepMarquee);
     }
 
     loadMessages();
