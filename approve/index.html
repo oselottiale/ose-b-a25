@@ -19,21 +19,12 @@
         }
 
         .msg {
-          padding: 20px;
-          border: 3px solid black;
-          border-radius: 10px;
-          background: white;
-          white-space: pre-wrap;
-          overflow-wrap: break-word;
-          text-align: center;
-          font-size: 2rem;
-          font-family: Arial, Helvetica, sans-serif;
-          color: black;
-          display: inline-block;   /* important */
-          width: auto;             /* natural width */
-          max-width: 45vw;         /* prevents giant messages */
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #fafafa;
         }
-
 
         .meta {
             font-size: 0.85rem;
@@ -144,78 +135,61 @@
 </div>
 
 <script>
-    let firstLoad = true;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEGOD0jJF4eGtEF_m7eS6QpmsF6UYU0Fi3-QIR-vaB_abhRpGvhjWpW4FZFlbHUu44Ug/exec";
 
-    async function loadMessages() {
-      const bigLoader = document.querySelector(".ldr");
-      const smallLoader = document.querySelector(".ldr-right");
-      const strip = document.getElementById("strip");
-    
-      if (firstLoad) {
-        bigLoader.style.display = "flex";
-        smallLoader.style.display = "none";
-      } else {
-        smallLoader.style.display = "flex";
-      }
-    
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
-      const data = await res.json();
-    
-      strip.innerHTML = "";
-    
-      // Build vertical column
-      const column = document.createElement("div");
-      column.className = "column";
-    
-      data.approved.slice().reverse().forEach(row => {
-        const div = document.createElement("div");
-        div.className = "msg";
-        div.textContent = row[0];
-        column.appendChild(div);
-      });
-    
-      strip.appendChild(column);
-    
-      // --- SLIDE-IN ANIMATION ---
-      strip.style.animation = "none"; // prevent marquee from starting early
-      strip.style.transition = "transform 0.8s ease";
-      strip.style.transform = "translateX(-2vw)";
-    
-      requestAnimationFrame(() => {
-        strip.style.transform = "translateX(0)";
-      });
-    
-      // Start marquee AFTER slide-in finishes
-      setTimeout(() => {
-        startScroll();
-      }, 850);
-    
-      if (firstLoad) {
-        bigLoader.remove();
-        firstLoad = false;
-      }
-    
-      smallLoader.style.display = "none";
-    }
-    
-    function startScroll() {
-      const strip = document.getElementById("strip");
-      const container = document.getElementById("message-container");
-    
-      const stripWidth = strip.scrollWidth;
-      const containerWidth = container.clientWidth;
-      const distance = stripWidth + containerWidth;
-    
-      const speed = 80;
-      const duration = distance / speed;
-    
-      strip.style.animation = `scrollRight ${duration}s linear infinite`;
-      strip.style.setProperty("--distance", `${distance}px`);
-    }
-    
-    loadMessages();
-    setInterval(loadMessages, 30000);
+    async function loadPending() {
+        const list = document.getElementById("list");
+        const loader = document.getElementById("ldr");
+        const box = document.getElementById("box");
 
+        list.textContent = "Ladataan...";
+
+        try {
+            const res = await fetch(`${SCRIPT_URL}?d=pending`);
+            const data = await res.json();
+
+            loader.style.display = "none";
+            box.style.visibility = "visible";
+
+            const filtered = (data.pending || []).filter(item => item.approved !== "Rejected");
+
+            if (filtered.length === 0) {
+                list.textContent = "Ei odottavia viestejä.";
+                return;
+            }
+
+            list.innerHTML = "";
+
+            filtered.forEach(item => {
+                const box = document.createElement("div");
+                box.className = "msg";
+
+                box.innerHTML = `
+                    <div class="meta">Rivi: ${item.row} — ${item.timestamp}</div>
+                    <div class="text">${item.message}</div>
+                    <button class="approve" onclick="approve(${item.row})">Hyväksy</button>
+                    <button class="reject" onclick="reject(${item.row})">Hylkää</button>
+                `;
+
+                list.appendChild(box);
+            });
+
+        } catch (err) {
+            list.textContent = "Virhe ladattaessa viestejä.";
+        }
+    }
+
+    async function approve(row) {
+        await fetch(`${SCRIPT_URL}?d=modify&row=${row}&col=2&value=Yes`);
+        loadPending();
+    }
+
+    async function reject(row) {
+        await fetch(`${SCRIPT_URL}?d=modify&row=${row}&col=2&value=Rejected`);
+        loadPending();
+    }
+
+    loadPending();
 </script>
 
 <script>
