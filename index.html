@@ -5,6 +5,7 @@
   <style>
     body { background-color: white; margin: 0; overflow: hidden; }
 
+    /* Loaders */
     .ldr, .ldr-right {
       position: fixed;
       width: 100px;
@@ -93,11 +94,11 @@
       align-items: flex-start;
       gap: 60px;
       will-change: transform;
-      transform: translateX(-3vw); /* start slightly off-screen */
-      opacity: 0;                  /* avoid flash */
+      opacity: 0; /* prevent flash */
+      transform: translateX(-2vw); /* small offset */
     }
 
-    /* Single vertical column */
+    /* Vertical column */
     .column {
       display: flex;
       flex-direction: column;
@@ -185,8 +186,8 @@
       strip.innerHTML = "";
       strip.style.animation = "none";
       strip.style.transition = "none";
-      strip.style.transform = "translateX(-3vw)";
       strip.style.opacity = "0";
+      strip.style.transform = "translateX(-2vw)";
 
       const column = document.createElement("div");
       column.className = "column";
@@ -200,17 +201,14 @@
 
       strip.appendChild(column);
 
-      // Force layout before animating
       void strip.offsetWidth;
 
-      // Slide-in from just outside viewport
       strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
         strip.style.opacity = "1";
       });
 
-      // Start marquee after slide-in
       setTimeout(() => {
         startScroll();
       }, 850);
@@ -231,7 +229,7 @@
       const containerWidth = container.clientWidth;
       const distance = stripWidth + containerWidth;
 
-      const speed = 80; // pixels per second
+      const speed = 80;
       const duration = distance / speed;
 
       strip.style.setProperty("--distance", `${distance}px`);
