@@ -95,7 +95,7 @@
       gap: 60px;
       will-change: transform;
       opacity: 0; /* prevent flash */
-      transform: translateX(-200px); /* INSTANTLY outside frame */
+      transform: translateX(100vw); /* instantly outside RIGHT side */
     }
 
     /* Vertical column */
@@ -187,9 +187,9 @@
       strip.style.animation = "none";
       strip.style.transition = "none";
 
-      /* INSTANTLY place outside frame */
+      /* Instantly place strip OUTSIDE the right side */
       strip.style.opacity = "0";
-      strip.style.transform = "translateX(-200px)";
+      strip.style.transform = "translateX(100vw)";
 
       const column = document.createElement("div");
       column.className = "column";
@@ -206,7 +206,7 @@
       /* Force layout */
       void strip.offsetWidth;
 
-      /* Slide-in */
+      /* Slide-in from right → left */
       strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
