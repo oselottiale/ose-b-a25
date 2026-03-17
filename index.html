@@ -6,6 +6,7 @@
   <style>
     body { background-color: white; margin: 0; overflow: hidden; }
 
+    /* Loaders */
     .ldr, .ldr-right {
       position: fixed;
       width: 100px;
@@ -24,6 +25,7 @@
       transform: translate(-50%, -50%);
     }
 
+    /* Header cards */
     .card, .card2 {
       display: flex;
       height: clamp(130px, 25vh, 180px);
@@ -72,6 +74,7 @@
       font-size: clamp(1rem, 400%, 2.5rem);
     }
 
+    /* Message viewport */
     #message-container {
       position: fixed;
       bottom: 0;
@@ -82,6 +85,7 @@
       padding: 20px 0;
     }
 
+    /* OUTER WRAPPER — slide-in only */
     #slide-wrapper {
       position: absolute;
       top: 0;
@@ -92,6 +96,7 @@
       will-change: transform;
     }
 
+    /* INNER WRAPPER — marquee only */
     #marquee-wrapper {
       position: absolute;
       top: 0;
@@ -102,6 +107,7 @@
       white-space: nowrap;
     }
 
+    /* Column */
     .column {
       display: inline-flex;
       flex-direction: column;
@@ -109,6 +115,7 @@
       white-space: normal;
     }
 
+    /* Message styling */
     .msg {
       padding: 20px;
       border: 3px solid black;
@@ -169,7 +176,7 @@
   <script>
     let firstLoad = true;
     let marqueeX = 0;
-    let marqueeSpeed = 0.3; // pixels per frame (~18px/sec at 60fps)
+    let marqueeSpeed = 0.3; // pixels per frame
 
     async function loadMessages() {
       const bigLoader = document.querySelector(".ldr");
@@ -222,10 +229,17 @@
         currentHeight += msgHeight;
       });
 
-      void slide.offsetWidth;
+      /* Freeze height + padding */
+      const contentHeight = marquee.offsetHeight;
+      slide.style.height = (contentHeight + 20) + "px"; // P1: 10 top + 10 bottom
 
+      /* Freeze width */
       slide.style.width = marquee.scrollWidth + "px";
 
+      /* Force layout */
+      void slide.offsetWidth;
+
+      /* Slide-in animation */
       slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         slide.style.transform = "translateX(0)";
