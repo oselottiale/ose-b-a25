@@ -5,7 +5,6 @@
   <style>
     body { background-color: white; margin: 0; overflow: hidden; }
 
-    /* Loaders */
     .ldr, .ldr-right {
       position: fixed;
       width: 100px;
@@ -84,19 +83,21 @@
       padding: 20px 0;
     }
 
-    /* Horizontal strip wrapper */
+    /* Horizontal strip */
     #strip {
+      position: absolute;
+      left: 0;
+      top: 0;
       display: flex;
       flex-direction: row;
       align-items: flex-start;
       gap: 60px;
       will-change: transform;
-      position: absolute;
-      left: 0;
-      top: 0;
+      transform: translateX(-3vw); /* start slightly off-screen */
+      opacity: 0;                  /* avoid flash */
     }
 
-    /* Vertical message column */
+    /* Single vertical column */
     .column {
       display: flex;
       flex-direction: column;
@@ -115,12 +116,14 @@
       font-size: 2rem;
       font-family: Arial, Helvetica, sans-serif;
       color: black;
-      width: 40vw;
+      display: inline-block;
+      width: auto;
+      max-width: 45vw;
     }
 
-    @keyframes scrollRight {
-      from { transform: translateX(-100vw); }
-      to   { transform: translateX(var(--distance)); }
+    @keyframes scrollLeft {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(-1 * var(--distance))); }
     }
   </style>
 </head>
@@ -165,75 +168,78 @@
     let firstLoad = true;
 
     async function loadMessages() {
-    const bigLoader = document.querySelector(".ldr");
-    const smallLoader = document.querySelector(".ldr-right");
-    const strip = document.getElementById("strip");
+      const bigLoader = document.querySelector(".ldr");
+      const smallLoader = document.querySelector(".ldr-right");
+      const strip = document.getElementById("strip");
 
-    if (firstLoad) {
+      if (firstLoad) {
         bigLoader.style.display = "flex";
         smallLoader.style.display = "none";
-    } else {
+      } else {
         smallLoader.style.display = "flex";
-    }
+      }
 
-    const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
-    const data = await res.json();
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
+      const data = await res.json();
 
-    strip.innerHTML = "";
+      strip.innerHTML = "";
+      strip.style.animation = "none";
+      strip.style.transition = "none";
+      strip.style.transform = "translateX(-3vw)";
+      strip.style.opacity = "0";
 
-    // Build vertical column
-    const column = document.createElement("div");
-    column.className = "column";
+      const column = document.createElement("div");
+      column.className = "column";
 
-    data.approved.slice().reverse().forEach(row => {
+      data.approved.slice().reverse().forEach(row => {
         const div = document.createElement("div");
         div.className = "msg";
         div.textContent = row[0];
         column.appendChild(div);
-    });
+      });
 
-    strip.appendChild(column);
+      strip.appendChild(column);
 
-    // --- SLIDE-IN ANIMATION ---
-    strip.style.animation = "none"; // prevent marquee from starting early
-    strip.style.transition = "transform 0.8s ease";
-    strip.style.transform = "translateX(-2vw)";
+      // Force layout before animating
+      void strip.offsetWidth;
 
-    requestAnimationFrame(() => {
+      // Slide-in from just outside viewport
+      strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
+      requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
-    });
+        strip.style.opacity = "1";
+      });
 
-    // Start marquee AFTER slide-in finishes
-    setTimeout(() => {
+      // Start marquee after slide-in
+      setTimeout(() => {
         startScroll();
-    }, 850);
+      }, 850);
 
-    if (firstLoad) {
+      if (firstLoad) {
         bigLoader.remove();
         firstLoad = false;
-    }
+      }
 
-    smallLoader.style.display = "none";
+      smallLoader.style.display = "none";
     }
 
     function startScroll() {
-    const strip = document.getElementById("strip");
-    const container = document.getElementById("message-container");
+      const strip = document.getElementById("strip");
+      const container = document.getElementById("message-container");
 
-    const stripWidth = strip.scrollWidth;
-    const containerWidth = container.clientWidth;
-    const distance = stripWidth + containerWidth;
+      const stripWidth = strip.scrollWidth;
+      const containerWidth = container.clientWidth;
+      const distance = stripWidth + containerWidth;
 
-    const speed = 80;
-    const duration = distance / speed;
+      const speed = 80; // pixels per second
+      const duration = distance / speed;
 
-    strip.style.animation = `scrollRight ${duration}s linear infinite`;
-    strip.style.setProperty("--distance", `${distance}px`);
+      strip.style.setProperty("--distance", `${distance}px`);
+      strip.style.animation = `scrollLeft ${duration}s linear infinite`;
     }
 
     loadMessages();
     setInterval(loadMessages, 30000);
-
   </script>
 
 </body>
