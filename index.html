@@ -135,6 +135,7 @@
 </head>
 
 <body>
+  <div id="measure-wrapper" style="visibility:hidden; position:absolute; left:0; top:0;"></div>
 
   <div class="card">
     <img class="qr" src="https://t6.oseale.com/qr-code.png">
@@ -174,132 +175,149 @@
   </div>
 
   <script>
-    let firstLoad = true;
-    
-    let slideX = 0;
-    let slideSpeed = 0.6;   // slide-in speed (constant)
-    let marqueeX = 0;
-    let marqueeSpeed = 0.3; // marquee speed (constant)
-    
-    let slidingIn = false;
-    
-    async function loadMessages() {
-      const bigLoader = document.querySelector(".ldr");
-      const smallLoader = document.querySelector(".ldr-right");
-      const slide = document.getElementById("slide-wrapper");
-      const marquee = document.getElementById("marquee-wrapper");
-      const container = document.getElementById("message-container");
-    
-      if (firstLoad) {
-        bigLoader.style.display = "flex";
-      } else {
-        smallLoader.style.display = "flex";
-      }
-    
-      const res = await fetch("https://script.google.com/macros/s/AKfycbzGuAd-V1JzOXNZdT_WBQLndVp8UI_N4h3X4-D5HS5IRj-PzNIIJrAhHstGwcBL1lcrdw/exec?d=get");
-      const data = await res.json();
-    
-      marquee.innerHTML = "";
-      marquee.style.left = "0px";
-      marqueeX = 0;
-    
-      slide.style.opacity = "0";
-      slide.style.transform = "none";
-    
-      let currentColumn = document.createElement("div");
+let firstLoad = true;
+
+let slideX = 0;
+let slideSpeed = 0.6;   // slide-in speed (constant)
+let marqueeX = 0;
+let marqueeSpeed = 0.3; // marquee speed (constant)
+
+let slidingIn = false;
+
+async function loadMessages() {
+  const bigLoader = document.querySelector(".ldr");
+  const smallLoader = document.querySelector(".ldr-right");
+
+  const slide = document.getElementById("slide-wrapper");
+  const marquee = document.getElementById("marquee-wrapper");
+  const container = document.getElementById("message-container");
+
+  // NEW: hidden measurement wrapper
+  let measure = document.getElementById("measure-wrapper");
+  if (!measure) {
+    measure = document.createElement("div");
+    measure.id = "measure-wrapper";
+    measure.style.visibility = "hidden";
+    measure.style.position = "absolute";
+    measure.style.left = "0";
+    measure.style.top = "0";
+    document.body.appendChild(measure);
+  }
+
+  if (firstLoad) {
+    bigLoader.style.display = "flex";
+  } else {
+    smallLoader.style.display = "flex";
+  }
+
+  const res = await fetch("https://script.google.com/macros/s/.../exec?d=get");
+  const data = await res.json();
+
+  // Reset measurement wrapper
+  measure.innerHTML = "";
+
+  // Build columns INSIDE measurement wrapper
+  let currentColumn = document.createElement("div");
+  currentColumn.className = "column";
+  measure.appendChild(currentColumn);
+
+  let currentHeight = 0;
+  const maxHeight = container.clientHeight;
+
+  data.approved.slice().reverse().forEach(row => {
+    const msg = document.createElement("div");
+    msg.className = "msg";
+    msg.textContent = row[0];
+
+    // Temporarily append to measure to get height
+    measure.appendChild(msg);
+    const msgHeight = msg.offsetHeight + 40;
+    measure.removeChild(msg);
+
+    if (currentHeight + msgHeight > maxHeight) {
+      currentColumn = document.createElement("div");
       currentColumn.className = "column";
-      marquee.appendChild(currentColumn);
-    
-      let currentHeight = 0;
-      const maxHeight = container.clientHeight;
-    
-      data.approved.slice().reverse().forEach(row => {
-        const msg = document.createElement("div");
-        msg.className = "msg";
-        msg.textContent = row[0];
-    
-        marquee.appendChild(msg);
-        const msgHeight = msg.offsetHeight + 40;
-        marquee.removeChild(msg);
-    
-        if (currentHeight + msgHeight > maxHeight) {
-          currentColumn = document.createElement("div");
-          currentColumn.className = "column";
-          marquee.appendChild(currentColumn);
-          currentHeight = 0;
-        }
-    
-        currentColumn.appendChild(msg);
-        currentHeight += msgHeight;
-      });
-    
-      // Freeze height + padding
-      const contentHeight = marquee.offsetHeight;
-      slide.style.height = (contentHeight + 20) + "px";
-    
-      // Freeze width
-      const slideWidth = marquee.scrollWidth;
-      slide.style.width = slideWidth + "px";
-    
-      // Commit layout
-      void slide.offsetWidth;
-    
-      // Start off-screen RIGHT
-      const containerWidth = container.clientWidth;
-      slideX = containerWidth;
-      slide.style.left = slideX + "px";
-    
-      slide.style.opacity = "1";
-    
-      // Begin slide-in
-      slidingIn = true;
-      requestAnimationFrame(stepSlideIn);
-    
-      if (firstLoad) {
-        bigLoader.remove();
-        firstLoad = false;
-      }
-    
-      smallLoader.style.display = "none";
+      measure.appendChild(currentColumn);
+      currentHeight = 0;
     }
-    
-    function stepSlideIn() {
-      const slide = document.getElementById("slide-wrapper");
-    
-      if (!slidingIn) return;
-    
-      slideX -= slideSpeed;
-    
-      if (slideX <= 0) {
-        slideX = 0;
-        slidingIn = false;
-        requestAnimationFrame(stepMarquee);
-      }
-    
-      slide.style.left = slideX + "px";
-      requestAnimationFrame(stepSlideIn);
-    }
-    
-    function stepMarquee() {
-      const marquee = document.getElementById("marquee-wrapper");
-      const container = document.getElementById("message-container");
-    
-      marqueeX -= marqueeSpeed;
-    
-      const totalWidth = marquee.scrollWidth;
-      const containerWidth = container.clientWidth;
-    
-      if (marqueeX <= -totalWidth) {
-        marqueeX = containerWidth;
-      }
-    
-      marquee.style.left = marqueeX + "px";
-    
-      requestAnimationFrame(stepMarquee);
-    }
-    
-    loadMessages();
-    setInterval(loadMessages, 30000);
+
+    currentColumn.appendChild(msg);
+    currentHeight += msgHeight;
+  });
+
+  // Now measurement wrapper contains the FINAL layout
+  const contentHeight = measure.offsetHeight;
+  const contentWidth = measure.scrollWidth;
+
+  // Copy layout into real marquee wrapper
+  marquee.innerHTML = measure.innerHTML;
+
+  // Freeze height + padding (F2 + P1)
+  slide.style.height = (contentHeight + 20) + "px";
+
+  // Freeze width
+  slide.style.width = contentWidth + "px";
+
+  // Commit layout
+  void slide.offsetWidth;
+
+  // Start off-screen RIGHT
+  const containerWidth = container.clientWidth;
+  slideX = containerWidth;
+  slide.style.left = slideX + "px";
+
+  slide.style.opacity = "1";
+
+  // Begin slide-in
+  slidingIn = true;
+  requestAnimationFrame(stepSlideIn);
+
+  if (firstLoad) {
+    bigLoader.remove();
+    firstLoad = false;
+  }
+
+  smallLoader.style.display = "none";
+}
+
+function stepSlideIn() {
+  const slide = document.getElementById("slide-wrapper");
+
+  if (!slidingIn) return;
+
+  slideX -= slideSpeed;
+
+  if (slideX <= 0) {
+    slideX = 0;
+    slidingIn = false;
+    requestAnimationFrame(stepMarquee);
+  }
+
+  slide.style.left = slideX + "px";
+  requestAnimationFrame(stepSlideIn);
+}
+
+function stepMarquee() {
+  const marquee = document.getElementById("marquee-wrapper");
+  const container = document.getElementById("message-container");
+
+  marqueeX -= marqueeSpeed;
+
+  const totalWidth = marquee.scrollWidth;
+  const containerWidth = container.clientWidth;
+
+  if (marqueeX <= -totalWidth) {
+    marqueeX = containerWidth;
+  }
+
+  marquee.style.left = marqueeX + "px";
+
+  requestAnimationFrame(stepMarquee);
+}
+
+loadMessages();
+setInterval(loadMessages, 30000);
+
 
   </script>
 
