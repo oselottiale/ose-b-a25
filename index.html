@@ -84,26 +84,33 @@
       padding: 20px 0;
     }
 
-    /* Horizontal strip containing all columns */
-    #strip {
+    /* OUTER WRAPPER — slide-in only */
+    #slide-wrapper {
       position: absolute;
       top: 0;
       left: 0;
+      will-change: transform;
+      opacity: 0;
+      transform: translateX(100vw); /* start fully off-screen right */
+    }
+
+    /* INNER WRAPPER — marquee only */
+    #marquee-wrapper {
       display: flex;
       flex-direction: row;
       align-items: flex-start;
       gap: 80px; /* spacing between columns */
       will-change: transform;
-      opacity: 0;
-      transform: translateX(100vw); 
     }
 
+    /* Column */
     .column {
       display: flex;
       flex-direction: column;
-      gap: 40px; 
+      gap: 40px; /* S2 spacing */
     }
 
+    /* Message styling */
     .msg {
       padding: 20px;
       border: 3px solid black;
@@ -116,8 +123,8 @@
       font-family: Arial, Helvetica, sans-serif;
       color: black;
       display: inline-block;
-      width: auto;       
-      max-width: 45vw;   
+      width: auto;       /* W1 natural width */
+      max-width: 45vw;   /* prevents overly wide messages */
     }
 
     @keyframes scrollRightToLeft {
@@ -151,7 +158,9 @@
   </div>
 
   <div id="message-container">
-    <div id="strip"></div>
+    <div id="slide-wrapper">
+      <div id="marquee-wrapper"></div>
+    </div>
   </div>
 
   <div class="ldr-right">
@@ -169,94 +178,93 @@
     async function loadMessages() {
       const bigLoader = document.querySelector(".ldr");
       const smallLoader = document.querySelector(".ldr-right");
-      const strip = document.getElementById("strip");
+      const slide = document.getElementById("slide-wrapper");
+      const marquee = document.getElementById("marquee-wrapper");
       const container = document.getElementById("message-container");
-    
+
       if (firstLoad) {
         bigLoader.style.display = "flex";
         smallLoader.style.display = "none";
       } else {
         smallLoader.style.display = "flex";
       }
-    
+
       const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
       const data = await res.json();
-    
-      strip.innerHTML = "";
-      strip.style.animation = "none";       // STOP marquee completely
-      strip.style.transition = "none";
-      strip.style.opacity = "0";
-      strip.style.transform = "translateX(100vw)"; // Start fully off-screen right
-    
+
+      marquee.innerHTML = "";
+      slide.style.transition = "none";
+      slide.style.opacity = "0";
+      slide.style.transform = "translateX(100vw)";
+
       /* Build auto-filled columns */
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
-      strip.appendChild(currentColumn);
-    
+      marquee.appendChild(currentColumn);
+
       let currentHeight = 0;
       const maxHeight = container.clientHeight;
-    
+
       data.approved.slice().reverse().forEach(row => {
         const msg = document.createElement("div");
         msg.className = "msg";
         msg.textContent = row[0];
-    
-        strip.appendChild(msg);
+
+        marquee.appendChild(msg);
         const msgHeight = msg.offsetHeight + 40;
-        strip.removeChild(msg);
-    
+        marquee.removeChild(msg);
+
         if (currentHeight + msgHeight > maxHeight) {
           currentColumn = document.createElement("div");
           currentColumn.className = "column";
-          strip.appendChild(currentColumn);
+          marquee.appendChild(currentColumn);
           currentHeight = 0;
         }
-    
+
         currentColumn.appendChild(msg);
         currentHeight += msgHeight;
       });
-    
+
       /* Force layout */
-      void strip.offsetWidth;
-    
+      void slide.offsetWidth;
+
       /* Slide-in animation */
-      strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
+      slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
-        strip.style.transform = "translateX(0)";
-        strip.style.opacity = "1";
+        slide.style.transform = "translateX(0)";
+        slide.style.opacity = "1";
       });
-    
+
       /* Start marquee AFTER slide-in finishes */
-      setTimeout(() => {
+      slide.addEventListener("transitionend", () => {
         startScroll();
-      }, 900); // slightly longer to avoid sprint
-    
+      }, { once: true });
+
       if (firstLoad) {
         bigLoader.remove();
         firstLoad = false;
       }
-    
+
       smallLoader.style.display = "none";
     }
-    
+
     function startScroll() {
-      const strip = document.getElementById("strip");
+      const marquee = document.getElementById("marquee-wrapper");
       const container = document.getElementById("message-container");
-    
-      const stripWidth = strip.scrollWidth;
+
+      const stripWidth = marquee.scrollWidth;
       const containerWidth = container.clientWidth;
       const distance = stripWidth + containerWidth;
-    
-      const speed = 40; // FASTER marquee (was 15)
+
+      const speed = 40; /* smooth, readable */
       const duration = distance / speed;
-    
-      strip.style.setProperty("--distance", `${distance}px`);
-      strip.style.animation = `scrollRightToLeft ${duration}s linear infinite`;
+
+      marquee.style.setProperty("--distance", `${distance}px`);
+      marquee.style.animation = `scrollRightToLeft ${duration}s linear infinite`;
     }
-    
+
     loadMessages();
     setInterval(loadMessages, 30000);
-
   </script>
 
 </body>
