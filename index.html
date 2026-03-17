@@ -175,109 +175,132 @@
 
   <script>
     let firstLoad = true;
+    
+    let slideX = 0;
+    let slideSpeed = 0.6;   // slide-in speed (constant)
     let marqueeX = 0;
-    let marqueeSpeed = 0.3; // pixels per frame
-
+    let marqueeSpeed = 0.3; // marquee speed (constant)
+    
+    let slidingIn = false;
+    
     async function loadMessages() {
       const bigLoader = document.querySelector(".ldr");
       const smallLoader = document.querySelector(".ldr-right");
       const slide = document.getElementById("slide-wrapper");
       const marquee = document.getElementById("marquee-wrapper");
       const container = document.getElementById("message-container");
-
+    
       if (firstLoad) {
         bigLoader.style.display = "flex";
       } else {
         smallLoader.style.display = "flex";
       }
-
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
+    
+      const res = await fetch("https://script.google.com/macros/s/.../exec?d=get");
       const data = await res.json();
-
+    
       marquee.innerHTML = "";
       marquee.style.left = "0px";
       marqueeX = 0;
-
-      slide.style.transition = "none";
+    
       slide.style.opacity = "0";
-      slide.style.transform = "translateX(100vw)";
-
+      slide.style.transform = "none";
+    
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       marquee.appendChild(currentColumn);
-
+    
       let currentHeight = 0;
       const maxHeight = container.clientHeight;
-
+    
       data.approved.slice().reverse().forEach(row => {
         const msg = document.createElement("div");
         msg.className = "msg";
         msg.textContent = row[0];
-
+    
         marquee.appendChild(msg);
         const msgHeight = msg.offsetHeight + 40;
         marquee.removeChild(msg);
-
+    
         if (currentHeight + msgHeight > maxHeight) {
           currentColumn = document.createElement("div");
           currentColumn.className = "column";
           marquee.appendChild(currentColumn);
           currentHeight = 0;
         }
-
+    
         currentColumn.appendChild(msg);
         currentHeight += msgHeight;
       });
-
-      /* Freeze height + padding */
+    
+      // Freeze height + padding
       const contentHeight = marquee.offsetHeight;
-      slide.style.height = (contentHeight + 20) + "px"; // P1: 10 top + 10 bottom
-
-      /* Freeze width */
-      slide.style.width = marquee.scrollWidth + "px";
-
-      /* Force layout */
+      slide.style.height = (contentHeight + 20) + "px";
+    
+      // Freeze width
+      const slideWidth = marquee.scrollWidth;
+      slide.style.width = slideWidth + "px";
+    
+      // Commit layout
       void slide.offsetWidth;
-
-      /* Slide-in animation */
-      slide.style.transition = "transform 0.8s ease, opacity 0.8s ease";
-      requestAnimationFrame(() => {
-        slide.style.transform = "translateX(0)";
-        slide.style.opacity = "1";
-      });
-
-      slide.addEventListener("transitionend", () => {
-        requestAnimationFrame(stepMarquee);
-      }, { once: true });
-
+    
+      // Start off-screen RIGHT
+      const containerWidth = container.clientWidth;
+      slideX = containerWidth;
+      slide.style.left = slideX + "px";
+    
+      slide.style.opacity = "1";
+    
+      // Begin slide-in
+      slidingIn = true;
+      requestAnimationFrame(stepSlideIn);
+    
       if (firstLoad) {
         bigLoader.remove();
         firstLoad = false;
       }
-
+    
       smallLoader.style.display = "none";
     }
-
+    
+    function stepSlideIn() {
+      const slide = document.getElementById("slide-wrapper");
+    
+      if (!slidingIn) return;
+    
+      slideX -= slideSpeed;
+    
+      if (slideX <= 0) {
+        slideX = 0;
+        slidingIn = false;
+        requestAnimationFrame(stepMarquee);
+      }
+    
+      slide.style.left = slideX + "px";
+      requestAnimationFrame(stepSlideIn);
+    }
+    
     function stepMarquee() {
       const marquee = document.getElementById("marquee-wrapper");
       const container = document.getElementById("message-container");
-
+    
       marqueeX -= marqueeSpeed;
-
+    
       const totalWidth = marquee.scrollWidth;
       const containerWidth = container.clientWidth;
-
+    
       if (marqueeX <= -totalWidth) {
         marqueeX = containerWidth;
       }
-
+    
       marquee.style.left = marqueeX + "px";
-
+    
       requestAnimationFrame(stepMarquee);
     }
-
+    
     loadMessages();
     setInterval(loadMessages, 30000);
+
   </script>
 
 </body>
