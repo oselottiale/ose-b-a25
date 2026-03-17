@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="https://dev.oseale.com/css/color-ldr.css">
+
   <style>
-    body { background-color: white; margin: 0; overflow: hidden; }
+    body {
+      background-color: white;
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
     /* Loaders */
     .ldr, .ldr-right {
@@ -16,12 +22,21 @@
       justify-content: center;
       z-index: 9999;
     }
-    .ldr { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .ldr-right { bottom: 5px; right: 5px; display: none; }
+    .ldr {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .ldr-right {
+      bottom: 5px;
+      right: 5px;
+      display: none;
+    }
 
     .hexagon, .ring {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
     }
 
@@ -48,8 +63,6 @@
       border-right: 3px solid gray;
       border-bottom-right-radius: 20px;
     }
-
-    h1 { font-family: Arial, Helvetica, sans-serif; }
 
     .qr {
       height: calc(100% - 20px);
@@ -85,34 +98,22 @@
       padding: 20px 0;
     }
 
-    /* OUTER WRAPPER — slide-in only */
+    /* Slide wrapper */
     #slide-wrapper {
       position: absolute;
       top: 0;
       left: 0;
       opacity: 0;
-      transform: translateX(100vw);
-      white-space: nowrap;
-      will-change: transform;
-    }
-
-    /* INNER WRAPPER — marquee only */
-    #marquee-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
-      display: flex;
-      flex-direction: row;
-      gap: 80px;
       white-space: nowrap;
     }
 
-    /* Column */
+    /* Column layout */
     .column {
       display: inline-flex;
       flex-direction: column;
       gap: 40px;
       white-space: normal;
+      vertical-align: top;
     }
 
     /* Message styling */
@@ -125,7 +126,6 @@
       overflow-wrap: break-word;
       text-align: center;
       font-size: 2rem;
-      font-family: Arial, Helvetica, sans-serif;
       color: black;
       display: inline-block;
       width: auto;
@@ -135,7 +135,6 @@
 </head>
 
 <body>
-  <div id="measure-wrapper" style="visibility:hidden; position:absolute; left:0; top:0;"></div>
 
   <div class="card">
     <img class="qr" src="https://t6.oseale.com/qr-code.png">
@@ -174,163 +173,135 @@
     </svg>
   </div>
 
+  <!-- Hidden measurement wrapper -->
+  <div id="measure-wrapper" style="visibility:hidden; position:absolute; left:0; top:0;"></div>
+
   <script>
-let firstLoad = true;
+    let firstLoad = true;
 
-let slideX = 0;
-let slideSpeed = 0.6;   // slide-in speed
-let marqueeX = 0;
-let marqueeSpeed = 0.3; // marquee speed
+    let slideX = 0;
+    let slideSpeed = 1.2;   // slide speed
+    let holdTime = 4000;    // pause time
 
-let slidingIn = false;
+    let slidingIn = false;
+    let slidingOut = false;
 
-async function loadMessages() {
-  const bigLoader = document.querySelector(".ldr");
-  const smallLoader = document.querySelector(".ldr-right");
+    async function loadMessages() {
+      const bigLoader = document.querySelector(".ldr");
+      const smallLoader = document.querySelector(".ldr-right");
 
-  const slide = document.getElementById("slide-wrapper");
-  const marquee = document.getElementById("marquee-wrapper");
-  const container = document.getElementById("message-container");
+      const slide = document.getElementById("slide-wrapper");
+      const marquee = document.getElementById("marquee-wrapper");
+      const container = document.getElementById("message-container");
+      const measure = document.getElementById("measure-wrapper");
 
-  // Hidden measurement wrapper (M5)
-  let measure = document.getElementById("measure-wrapper");
-  if (!measure) {
-    measure = document.createElement("div");
-    measure.id = "measure-wrapper";
-    measure.style.visibility = "hidden";
-    measure.style.position = "absolute";
-    measure.style.left = "0";
-    measure.style.top = "0";
-    measure.style.width = "auto";
-    document.body.appendChild(measure);
-  }
+      if (firstLoad) bigLoader.style.display = "flex";
+      else smallLoader.style.display = "flex";
 
-  if (firstLoad) {
-    bigLoader.style.display = "flex";
-  } else {
-    smallLoader.style.display = "flex";
-  }
+      const res = await fetch("https://script.google.com/macros/s/.../exec?d=get");
+      const data = await res.json();
 
-  const res = await fetch("https://script.google.com/macros/s/AKfycbzGuAd-V1JzOXNZdT_WBQLndVp8UI_N4h3X4-D5HS5IRj-PzNIIJrAhHstGwcBL1lcrdw/exec?d=get");
-  const data = await res.json();
+      measure.innerHTML = "";
 
-  // Reset measurement wrapper
-  measure.innerHTML = "";
-
-  // Build columns INSIDE measurement wrapper
-  let currentColumn = document.createElement("div");
-  currentColumn.className = "column";
-  measure.appendChild(currentColumn);
-
-  let currentHeight = 0;
-  const maxHeight = container.clientHeight;
-
-  data.approved.slice().reverse().forEach(row => {
-    const msg = document.createElement("div");
-    msg.className = "msg";
-    msg.textContent = row[0];
-
-    // Temporarily append to measure to get height
-    measure.appendChild(msg);
-    const msgHeight = msg.offsetHeight + 40;
-    measure.removeChild(msg);
-
-    if (currentHeight + msgHeight > maxHeight) {
-      currentColumn = document.createElement("div");
+      let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       measure.appendChild(currentColumn);
-      currentHeight = 0;
+
+      let currentHeight = 0;
+      const maxHeight = container.clientHeight;
+
+      data.approved.slice().reverse().forEach(row => {
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.textContent = row[0];
+
+        measure.appendChild(msg);
+        const msgHeight = msg.offsetHeight + 40;
+        measure.removeChild(msg);
+
+        if (currentHeight + msgHeight > maxHeight) {
+          currentColumn = document.createElement("div");
+          currentColumn.className = "column";
+          measure.appendChild(currentColumn);
+          currentHeight = 0;
+        }
+
+        currentColumn.appendChild(msg);
+        currentHeight += msgHeight;
+      });
+
+      void measure.offsetWidth;
+
+      const contentHeight = measure.offsetHeight;
+      const contentWidth = measure.scrollWidth;
+
+      marquee.innerHTML = measure.innerHTML;
+
+      slide.style.height = (contentHeight + 20) + "px";
+      slide.style.width = contentWidth + "px";
+
+      void slide.offsetWidth;
+
+      requestAnimationFrame(() => {
+        const containerWidth = container.clientWidth;
+
+        slideX = containerWidth;
+        slide.style.left = slideX + "px";
+        slide.style.opacity = "1";
+
+        slidingIn = true;
+        requestAnimationFrame(stepSlideIn);
+      });
+
+      if (firstLoad) {
+        bigLoader.remove();
+        firstLoad = false;
+      }
+
+      smallLoader.style.display = "none";
     }
 
-    currentColumn.appendChild(msg);
-    currentHeight += msgHeight;
-  });
+    function stepSlideIn() {
+      const slide = document.getElementById("slide-wrapper");
 
-  // Force layout BEFORE measuring
-  void measure.offsetWidth;
-  void container.offsetWidth;
+      if (!slidingIn) return;
 
-  // Final layout dimensions
-  const contentHeight = measure.offsetHeight;
-  const contentWidth = measure.scrollWidth;
+      slideX -= slideSpeed;
 
-  // Copy layout into real marquee wrapper
-  marquee.innerHTML = measure.innerHTML;
+      if (slideX <= 0) {
+        slideX = 0;
+        slidingIn = false;
 
-  // Freeze height + padding (F2 + P1)
-  slide.style.height = (contentHeight + 20) + "px";
+        setTimeout(() => {
+          slidingOut = true;
+          requestAnimationFrame(stepSlideOut);
+        }, holdTime);
 
-  // Freeze width
-  slide.style.width = contentWidth + "px";
+        return;
+      }
 
-  // Force layout again
-  void slide.offsetWidth;
+      slide.style.left = slideX + "px";
+      requestAnimationFrame(stepSlideIn);
+    }
 
-  // ⭐ WAIT ONE FRAME BEFORE MEASURING
-  requestAnimationFrame(() => {
-    const containerWidth = container.clientWidth;
-    const slideWidth = slide.offsetWidth;
+    function stepSlideOut() {
+      const slide = document.getElementById("slide-wrapper");
 
-    // ⭐ Correct starting position:
-    // Start EXACTLY one slide-width off-screen to the right
-    slideX = containerWidth;
+      if (!slidingOut) return;
 
-    slide.style.left = slideX + "px";
-    slide.style.opacity = "1";
+      slideX -= slideSpeed;
 
-    slidingIn = true;
-    requestAnimationFrame(stepSlideIn);
-  });
+      if (slideX <= -slide.offsetWidth) {
+        slidingOut = false;
+        loadMessages();
+        return;
+      }
 
-  if (firstLoad) {
-    bigLoader.remove();
-    firstLoad = false;
-  }
+      slide.style.left = slideX + "px";
+      requestAnimationFrame(stepSlideOut);
+    }
 
-  smallLoader.style.display = "none";
-}
-
-function stepSlideIn() {
-  const slide = document.getElementById("slide-wrapper");
-
-  if (!slidingIn) return;
-
-  slideX -= slideSpeed;
-
-  if (slideX <= 0) {
-    slideX = 0;
-    slidingIn = false;
-    requestAnimationFrame(stepMarquee);
-  }
-
-  slide.style.left = slideX + "px";
-  requestAnimationFrame(stepSlideIn);
-}
-
-function stepMarquee() {
-  const marquee = document.getElementById("marquee-wrapper");
-  const container = document.getElementById("message-container");
-
-  marqueeX -= marqueeSpeed;
-
-  const totalWidth = marquee.scrollWidth;
-  const containerWidth = container.clientWidth;
-
-  if (marqueeX <= -totalWidth) {
-    marqueeX = containerWidth;
-  }
-
-  marquee.style.left = marqueeX + "px";
-
-  requestAnimationFrame(stepMarquee);
-}
-
-loadMessages();
-setInterval(loadMessages, 30000);
-
-
-
-
+    loadMessages();
   </script>
 
 </body>
