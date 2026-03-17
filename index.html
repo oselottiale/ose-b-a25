@@ -186,7 +186,7 @@
       strip.style.animation = "none";       
       strip.style.transition = "none";
       strip.style.opacity = "0";
-      strip.style.transform = "translateX(100vw)"; 
+      strip.style.transform = "none"; 
     
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
@@ -219,7 +219,7 @@
     
       strip.style.transition = "transform 4s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
-        strip.style.transform = "translateX(0)";
+        strip.style.transform = "none";
         strip.style.opacity = "1";
       });
     
