@@ -84,7 +84,7 @@
       padding: 20px 0;
     }
 
-    /* Horizontal strip */
+    /* Horizontal strip containing all columns */
     #strip {
       position: absolute;
       top: 0;
@@ -92,17 +92,17 @@
       display: flex;
       flex-direction: row;
       align-items: flex-start;
-      gap: 60px;
+      gap: 80px; /* spacing between columns */
       will-change: transform;
-      opacity: 0; /* prevent flash */
-      transform: translateX(100vw); /* instantly outside RIGHT side */
+      opacity: 0;
+      transform: translateX(100vw); /* start fully off-screen right */
     }
 
-    /* Vertical column */
+    /* Each column */
     .column {
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      gap: 40px; /* S2 spacing */
     }
 
     /* Message styling */
@@ -118,8 +118,8 @@
       font-family: Arial, Helvetica, sans-serif;
       color: black;
       display: inline-block;
-      width: auto;
-      max-width: 45vw;
+      width: auto;       /* W1 natural width */
+      max-width: 45vw;   /* prevents overly wide messages */
     }
 
     @keyframes scrollRightToLeft {
@@ -172,6 +172,7 @@
       const bigLoader = document.querySelector(".ldr");
       const smallLoader = document.querySelector(".ldr-right");
       const strip = document.getElementById("strip");
+      const container = document.getElementById("message-container");
 
       if (firstLoad) {
         bigLoader.style.display = "flex";
@@ -186,27 +187,43 @@
       strip.innerHTML = "";
       strip.style.animation = "none";
       strip.style.transition = "none";
-
-      /* Instantly place strip OUTSIDE the right side */
       strip.style.opacity = "0";
       strip.style.transform = "translateX(100vw)";
 
-      const column = document.createElement("div");
-      column.className = "column";
+      /* Build auto-filled columns */
+      let currentColumn = document.createElement("div");
+      currentColumn.className = "column";
+      strip.appendChild(currentColumn);
+
+      let currentHeight = 0;
+      const maxHeight = container.clientHeight;
 
       data.approved.slice().reverse().forEach(row => {
-        const div = document.createElement("div");
-        div.className = "msg";
-        div.textContent = row[0];
-        column.appendChild(div);
-      });
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.textContent = row[0];
 
-      strip.appendChild(column);
+        /* Temporarily measure height */
+        strip.appendChild(msg);
+        const msgHeight = msg.offsetHeight + 40; /* include spacing */
+        strip.removeChild(msg);
+
+        /* Start new column if needed */
+        if (currentHeight + msgHeight > maxHeight) {
+          currentColumn = document.createElement("div");
+          currentColumn.className = "column";
+          strip.appendChild(currentColumn);
+          currentHeight = 0;
+        }
+
+        currentColumn.appendChild(msg);
+        currentHeight += msgHeight;
+      });
 
       /* Force layout */
       void strip.offsetWidth;
 
-      /* Slide-in from right → left */
+      /* Slide-in */
       strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
@@ -234,7 +251,7 @@
       const containerWidth = container.clientWidth;
       const distance = stripWidth + containerWidth;
 
-      const speed = 80;
+      const speed = 15; /* slow, readable */
       const duration = distance / speed;
 
       strip.style.setProperty("--distance", `${distance}px`);
