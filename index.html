@@ -174,8 +174,7 @@
     </svg>
   </div>
 
-  <script>
-let firstLoad = true;
+  <script>let firstLoad = true;
 
 let slideX = 0;
 let slideSpeed = 0.6;   // slide-in speed (constant)
@@ -192,7 +191,7 @@ async function loadMessages() {
   const marquee = document.getElementById("marquee-wrapper");
   const container = document.getElementById("message-container");
 
-  // NEW: hidden measurement wrapper
+  // Hidden measurement wrapper (M5)
   let measure = document.getElementById("measure-wrapper");
   if (!measure) {
     measure = document.createElement("div");
@@ -210,7 +209,7 @@ async function loadMessages() {
     smallLoader.style.display = "flex";
   }
 
-  const res = await fetch("https://script.google.com/macros/s/AKfycbzGuAd-V1JzOXNZdT_WBQLndVp8UI_N4h3X4-D5HS5IRj-PzNIIJrAhHstGwcBL1lcrdw/exec?d=get");
+  const res = await fetch("https://script.google.com/macros/s/.../exec?d=get");
   const data = await res.json();
 
   // Reset measurement wrapper
@@ -245,6 +244,10 @@ async function loadMessages() {
     currentHeight += msgHeight;
   });
 
+  // Force layout BEFORE measuring widths
+  void measure.offsetWidth;
+  void container.offsetWidth;
+
   // Now measurement wrapper contains the FINAL layout
   const contentHeight = measure.offsetHeight;
   const contentWidth = measure.scrollWidth;
@@ -258,19 +261,20 @@ async function loadMessages() {
   // Freeze width
   slide.style.width = contentWidth + "px";
 
-  // Commit layout
+  // Force layout again
   void slide.offsetWidth;
 
-  // Start off-screen RIGHT
-  const containerWidth = container.clientWidth;
-  slideX = containerWidth;
-  slide.style.left = slideX + "px";
+  // ⭐ WAIT ONE FRAME BEFORE MEASURING WIDTH
+  requestAnimationFrame(() => {
+    const containerWidth = container.clientWidth;
 
-  slide.style.opacity = "1";
-
-  // Begin slide-in
-  slidingIn = true;
-  requestAnimationFrame(stepSlideIn);
+    // If still 0, force a second frame
+    if (containerWidth === 0) {
+      requestAnimationFrame(() => startSlideIn(container, slide));
+    } else {
+      startSlideIn(container, slide);
+    }
+  });
 
   if (firstLoad) {
     bigLoader.remove();
@@ -278,6 +282,18 @@ async function loadMessages() {
   }
 
   smallLoader.style.display = "none";
+}
+
+function startSlideIn(container, slide) {
+  const containerWidth = container.clientWidth;
+
+  // Start off-screen RIGHT
+  slideX = containerWidth;
+  slide.style.left = slideX + "px";
+  slide.style.opacity = "1";
+
+  slidingIn = true;
+  requestAnimationFrame(stepSlideIn);
 }
 
 function stepSlideIn() {
@@ -317,6 +333,7 @@ function stepMarquee() {
 
 loadMessages();
 setInterval(loadMessages, 30000);
+
 
 
   </script>
