@@ -1,28 +1,13 @@
 <!doctype html>
 <head>
-  <link rel="stylesheet" href="https://dev.oseale.com/css/black-ldr.css">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://dev.oseale.com/css/color-ldr.css">
   <style>
-    body {
-      background-color: white;
-    }
-    .ldr {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100px;
-      height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
+    body { background-color: white; margin: 0; overflow: hidden; }
 
-    .ldr-right {
+    /* Loaders */
+    .ldr, .ldr-right {
       position: fixed;
-      top: 90%;
-      left: 95%;
-      transform: translate(-50%, -50%);
       width: 100px;
       height: 100px;
       display: flex;
@@ -30,82 +15,226 @@
       justify-content: center;
       z-index: 9999;
     }
+    .ldr { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .ldr-right { bottom: 5px; right: 5px; display: none; }
 
     .hexagon, .ring {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%); 
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Header cards */
+    .card, .card2 {
+      display: flex;
+      height: clamp(130px, 25vh, 180px);
+      align-items: center;
+      position: fixed;
+      top: 0;
+      background-color: white;
+      z-index: 9999;
+      border-bottom: 3px solid gray;
+    }
+    .card {
+      width: clamp(525px, 40vw, 700px);
+      right: 0;
+      border-left: 3px solid gray;
+      border-bottom-left-radius: 20px;
+    }
+    .card2 {
+      width: clamp(425px, 40vw, 425px);
+      left: 0;
+      border-right: 3px solid gray;
+      border-bottom-right-radius: 20px;
+    }
+
+    h1 { font-family: Arial, Helvetica, sans-serif; }
+
+    .qr {
+      height: calc(100% - 20px);
+      margin: 10px;
+      aspect-ratio: 1/1;
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+
+    .text-box, .text-box2 {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+    .text-box2 { margin-left: 15px; }
+
+    .text-box h1, .text-box2 h1 {
       margin: 0;
-      padding: 0;
-  }
+      white-space: normal;
+      line-height: 1.1;
+      font-size: clamp(1rem, 400%, 2.5rem);
+    }
 
-  .card {
-    display: flex;
-    align-items: center;
-    container-type: size;
-    border-bottom-left-radius: 20px;
-    z-index: 9990;
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 30%;
-  height: 25%;
-  border-left: 3px solid gray;
-  border-bottom: 3px solid gray;
-  margin: 0;
-  padding: 0;
-  z-index: 9999;
-  }
+    /* Message viewport */
+    #message-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: calc(100vh - 225px);
+      overflow: hidden;
+      padding: 20px 0;
+    }
 
-  h1 {
-    font-family: Arial, Helvetica, sans-sherif;
-  }
+    /* Horizontal strip wrapper */
+    #strip {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 60px;
+      will-change: transform;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
 
-  .qr {
-    height: calc(100% - 20px);
-    margin: 10px;
-    margin-right: 3px;
-  }
+    /* Vertical message column */
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
 
-  .card h1 {
-    flex: 1 1 auto;
-    margin: 0.5rem;
-    line-height: 1.05;
-    white-space: normal;
-    display: flex;
-    align-items: center; 
-  
-    font-size: min(
-      clamp(0.8rem, 18cqw, 6rem),
-      clamp(0.8rem, 32cqh, 6rem)
-    );
-  }
+    /* Message styling */
+    .msg {
+      padding: 20px;
+      border: 3px solid black;
+      border-radius: 10px;
+      background: white;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      text-align: center;
+      font-size: 2rem;
+      font-family: Arial, Helvetica, sans-serif;
+      color: black;
+      width: 40vw;
+    }
 
-
-
-
-
+    @keyframes scrollRight {
+      from { transform: translateX(-100vw); }
+      to   { transform: translateX(var(--distance)); }
+    }
   </style>
 </head>
 <body>
-  <h1>oseale ui test</h1>
-  <div class="card"><img class="qr" src="https://t6.oseale.com/qr-code.png"><h1>skannaa qr koodi lähettääksesi viesti aiheesta</h1></div>
+
+  <div class="card">
+    <img class="qr" src="https://t6.oseale.com/qr-code.png">
+    <div class="text-box">
+      <h1>Skannaa qr koodi lähettääksesi viesti aiheesta!</h1>
+    </div>
+  </div>
+
+  <div class="card2">
+    <div class="text-box2">
+      <h1>Peltsiläisten viestit rasismin vastaisesta viikosta.</h1>
+    </div>
+  </div>
+
   <div class="ldr">
-      <svg class="hexagon" viewBox="0 0 50 50">
-          <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
-      </svg>
-      <svg class="ring" viewBox="0 0 50 50">
-          <circle cx="25" cy="25" r="22"></circle>
-      </svg>
+    <svg class="hexagon" viewBox="0 0 50 50">
+      <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
+    </svg>
+    <svg class="ring" viewBox="0 0 50 50">
+      <circle cx="25" cy="25" r="22"></circle>
+    </svg>
   </div>
+
+  <div id="message-container">
+    <div id="strip"></div>
+  </div>
+
   <div class="ldr-right">
-      <svg class="hexagon" viewBox="0 0 50 50">
-          <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
-      </svg>
-      <svg class="ring" viewBox="0 0 50 50">
-          <circle cx="25" cy="25" r="22"></circle>
-      </svg>
+    <svg class="hexagon" viewBox="0 0 50 50">
+      <polygon points="10,25 17.5,12 32.5,12 40,25 32.5,38 17.5,38"></polygon>
+    </svg>
+    <svg class="ring" viewBox="0 0 50 50">
+      <circle cx="25" cy="25" r="22"></circle>
+    </svg>
   </div>
+
+  <script>
+    let firstLoad = true;
+
+    async function loadMessages() {
+    const bigLoader = document.querySelector(".ldr");
+    const smallLoader = document.querySelector(".ldr-right");
+    const strip = document.getElementById("strip");
+
+    if (firstLoad) {
+        bigLoader.style.display = "flex";
+        smallLoader.style.display = "none";
+    } else {
+        smallLoader.style.display = "flex";
+    }
+
+    const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
+    const data = await res.json();
+
+    strip.innerHTML = "";
+
+    // Build vertical column
+    const column = document.createElement("div");
+    column.className = "column";
+
+    data.approved.slice().reverse().forEach(row => {
+        const div = document.createElement("div");
+        div.className = "msg";
+        div.textContent = row[0];
+        column.appendChild(div);
+    });
+
+    strip.appendChild(column);
+
+    // --- SLIDE-IN ANIMATION ---
+    strip.style.animation = "none"; // prevent marquee from starting early
+    strip.style.transition = "transform 0.8s ease";
+    strip.style.transform = "translateX(-2vw)";
+
+    requestAnimationFrame(() => {
+        strip.style.transform = "translateX(0)";
+    });
+
+    // Start marquee AFTER slide-in finishes
+    setTimeout(() => {
+        startScroll();
+    }, 850);
+
+    if (firstLoad) {
+        bigLoader.remove();
+        firstLoad = false;
+    }
+
+    smallLoader.style.display = "none";
+    }
+
+    function startScroll() {
+    const strip = document.getElementById("strip");
+    const container = document.getElementById("message-container");
+
+    const stripWidth = strip.scrollWidth;
+    const containerWidth = container.clientWidth;
+    const distance = stripWidth + containerWidth;
+
+    const speed = 80;
+    const duration = distance / speed;
+
+    strip.style.animation = `scrollRight ${duration}s linear infinite`;
+    strip.style.setProperty("--distance", `${distance}px`);
+    }
+
+    loadMessages();
+    setInterval(loadMessages, 30000);
+
+  </script>
+
 </body>
 </html>
