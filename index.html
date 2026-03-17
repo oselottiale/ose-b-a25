@@ -87,15 +87,15 @@
     /* Horizontal strip */
     #strip {
       position: absolute;
-      left: 0;
       top: 0;
+      left: 0;
       display: flex;
       flex-direction: row;
       align-items: flex-start;
       gap: 60px;
       will-change: transform;
       opacity: 0; /* prevent flash */
-      transform: translateX(-2vw); /* small offset */
+      transform: translateX(-200px); /* INSTANTLY outside frame */
     }
 
     /* Vertical column */
@@ -186,8 +186,10 @@
       strip.innerHTML = "";
       strip.style.animation = "none";
       strip.style.transition = "none";
+
+      /* INSTANTLY place outside frame */
       strip.style.opacity = "0";
-      strip.style.transform = "translateX(-2vw)";
+      strip.style.transform = "translateX(-200px)";
 
       const column = document.createElement("div");
       column.className = "column";
@@ -201,14 +203,17 @@
 
       strip.appendChild(column);
 
+      /* Force layout */
       void strip.offsetWidth;
 
+      /* Slide-in */
       strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
         strip.style.opacity = "1";
       });
 
+      /* Start marquee AFTER slide-in */
       setTimeout(() => {
         startScroll();
       }, 850);
