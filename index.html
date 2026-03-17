@@ -183,11 +183,12 @@
       const data = await res.json();
     
       strip.innerHTML = "";
-      strip.style.animation = "none";       
+      strip.style.animation = "none";       // STOP marquee completely
       strip.style.transition = "none";
       strip.style.opacity = "0";
-      strip.style.transform = "none"; 
+      strip.style.transform = "translateX(100vw)"; // Start fully off-screen right
     
+      /* Build auto-filled columns */
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       strip.appendChild(currentColumn);
@@ -215,17 +216,20 @@
         currentHeight += msgHeight;
       });
     
+      /* Force layout */
       void strip.offsetWidth;
     
-      strip.style.transition = "transform 4s ease, opacity 0.8s ease";
+      /* Slide-in animation */
+      strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
-        strip.style.transform = "none";
+        strip.style.transform = "translateX(0)";
         strip.style.opacity = "1";
       });
     
+      /* Start marquee AFTER slide-in finishes */
       setTimeout(() => {
         startScroll();
-      }, 900); 
+      }, 900); // slightly longer to avoid sprint
     
       if (firstLoad) {
         bigLoader.remove();
