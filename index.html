@@ -95,17 +95,15 @@
       gap: 80px; /* spacing between columns */
       will-change: transform;
       opacity: 0;
-      /*transform: translateX(100vw);*/ /* start fully off-screen right */
+      transform: translateX(100vw); 
     }
 
-    /* Each column */
     .column {
       display: flex;
       flex-direction: column;
-      gap: 40px; /* S2 spacing */
+      gap: 40px; 
     }
 
-    /* Message styling */
     .msg {
       padding: 20px;
       border: 3px solid black;
@@ -118,8 +116,8 @@
       font-family: Arial, Helvetica, sans-serif;
       color: black;
       display: inline-block;
-      width: auto;       /* W1 natural width */
-      max-width: 45vw;   /* prevents overly wide messages */
+      width: auto;       
+      max-width: 45vw;   
     }
 
     @keyframes scrollRightToLeft {
@@ -185,12 +183,11 @@
       const data = await res.json();
     
       strip.innerHTML = "";
-      strip.style.animation = "none";       // STOP marquee completely
+      strip.style.animation = "none";       
       strip.style.transition = "none";
       strip.style.opacity = "0";
-      strip.style.transform = "translateX(100vw)"; // Start fully off-screen right
+      strip.style.transform = "translateX(100vw)"; 
     
-      /* Build auto-filled columns */
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       strip.appendChild(currentColumn);
@@ -218,20 +215,17 @@
         currentHeight += msgHeight;
       });
     
-      /* Force layout */
       void strip.offsetWidth;
     
-      /* Slide-in animation */
-      strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
+      strip.style.transition = "transform 0.2s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
         strip.style.opacity = "1";
       });
     
-      /* Start marquee AFTER slide-in finishes */
       setTimeout(() => {
         startScroll();
-      }, 900); // slightly longer to avoid sprint
+      }, 900); 
     
       if (firstLoad) {
         bigLoader.remove();
