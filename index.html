@@ -173,93 +173,92 @@
       const smallLoader = document.querySelector(".ldr-right");
       const strip = document.getElementById("strip");
       const container = document.getElementById("message-container");
-
+    
       if (firstLoad) {
         bigLoader.style.display = "flex";
         smallLoader.style.display = "none";
       } else {
         smallLoader.style.display = "flex";
       }
-
+    
       const res = await fetch("https://script.google.com/macros/s/AKfycbwzozQyRx6f7Gl2g_osHnEMEtjbE3EY9CsEeJij0iw-_50H-ZUFcAUfbVM-cEqfaBsScQ/exec?d=get");
       const data = await res.json();
-
+    
       strip.innerHTML = "";
-      strip.style.animation = "none";
+      strip.style.animation = "none";       // STOP marquee completely
       strip.style.transition = "none";
       strip.style.opacity = "0";
-      strip.style.transform = "translateX(100vw)";
-
+      strip.style.transform = "translateX(100vw)"; // Start fully off-screen right
+    
       /* Build auto-filled columns */
       let currentColumn = document.createElement("div");
       currentColumn.className = "column";
       strip.appendChild(currentColumn);
-
+    
       let currentHeight = 0;
       const maxHeight = container.clientHeight;
-
+    
       data.approved.slice().reverse().forEach(row => {
         const msg = document.createElement("div");
         msg.className = "msg";
         msg.textContent = row[0];
-
-        /* Temporarily measure height */
+    
         strip.appendChild(msg);
-        const msgHeight = msg.offsetHeight + 40; /* include spacing */
+        const msgHeight = msg.offsetHeight + 40;
         strip.removeChild(msg);
-
-        /* Start new column if needed */
+    
         if (currentHeight + msgHeight > maxHeight) {
           currentColumn = document.createElement("div");
           currentColumn.className = "column";
           strip.appendChild(currentColumn);
           currentHeight = 0;
         }
-
+    
         currentColumn.appendChild(msg);
         currentHeight += msgHeight;
       });
-
+    
       /* Force layout */
       void strip.offsetWidth;
-
-      /* Slide-in */
+    
+      /* Slide-in animation */
       strip.style.transition = "transform 0.8s ease, opacity 0.8s ease";
       requestAnimationFrame(() => {
         strip.style.transform = "translateX(0)";
         strip.style.opacity = "1";
       });
-
-      /* Start marquee AFTER slide-in */
+    
+      /* Start marquee AFTER slide-in finishes */
       setTimeout(() => {
         startScroll();
-      }, 850);
-
+      }, 900); // slightly longer to avoid sprint
+    
       if (firstLoad) {
         bigLoader.remove();
         firstLoad = false;
       }
-
+    
       smallLoader.style.display = "none";
     }
-
+    
     function startScroll() {
       const strip = document.getElementById("strip");
       const container = document.getElementById("message-container");
-
+    
       const stripWidth = strip.scrollWidth;
       const containerWidth = container.clientWidth;
       const distance = stripWidth + containerWidth;
-
-      const speed = 15; /* slow, readable */
+    
+      const speed = 40; // FASTER marquee (was 15)
       const duration = distance / speed;
-
+    
       strip.style.setProperty("--distance", `${distance}px`);
       strip.style.animation = `scrollRightToLeft ${duration}s linear infinite`;
     }
-
+    
     loadMessages();
     setInterval(loadMessages, 30000);
+
   </script>
 
 </body>
