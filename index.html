@@ -266,15 +266,17 @@ async function loadMessages() {
 
   // ⭐ WAIT ONE FRAME BEFORE MEASURING WIDTH
   requestAnimationFrame(() => {
-    const containerWidth = container.clientWidth;
-
-    // If still 0, force a second frame
-    if (containerWidth === 0) {
-      requestAnimationFrame(() => startSlideIn(container, slide));
-    } else {
-      startSlideIn(container, slide);
-    }
+    const slideWidth = slide.offsetWidth;
+  
+    // Start exactly one slide-width off-screen RIGHT
+    slideX = slideWidth;
+    slide.style.left = slideX + "px";
+    slide.style.opacity = "1";
+  
+    slidingIn = true;
+    requestAnimationFrame(stepSlideIn);
   });
+
 
   if (firstLoad) {
     bigLoader.remove();
