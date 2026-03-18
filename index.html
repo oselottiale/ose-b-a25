@@ -12,7 +12,6 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* Loaders */
     .ldr, .ldr-right {
       position: fixed;
       width: 100px;
@@ -40,7 +39,6 @@
       transform: translate(-50%, -50%);
     }
 
-    /* Header cards */
     .card, .card2 {
       display: flex;
       height: clamp(130px, 25vh, 180px);
@@ -87,7 +85,6 @@
       font-size: clamp(1rem, 400%, 2.5rem);
     }
 
-    /* Message viewport */
     #message-container {
       position: fixed;
       bottom: 0;
@@ -98,7 +95,6 @@
       padding: 20px 0;
     }
 
-    /* Slide wrapper */
     #slide-wrapper {
       position: absolute;
       top: 0;
@@ -107,16 +103,18 @@
       white-space: nowrap;
     }
 
-    /* Column layout */
     .column {
-      display: inline-flex;
-      flex-direction: column;
+      display: inline-block;
       gap: 40px;
       white-space: normal;
       vertical-align: top;
     }
 
-    /* Message styling */
+    .column > .msg {
+    display: block;          
+    margin-bottom: 40px;
+    }
+
     .msg {
       padding: 20px;
       border: 3px solid black;
@@ -127,11 +125,27 @@
       text-align: center;
       font-size: 2rem;
       color: black;
-      display: inline-block;
+      display: block;
       width: auto;
       max-width: 45vw;
       margin-left: 40px;
     }
+
+    #marquee-wrapper {
+    display: inline-block;
+    flex-direction: row;
+    gap: 40px;
+    white-space: nowrap;
+    width: max-content;
+    }
+    #measure-wrapper {
+      position: absolute;
+      left: -99999px;
+      top: 0;
+      white-space: nowrap;
+    }
+
+
   </style>
 </head>
 
@@ -174,136 +188,236 @@
     </svg>
   </div>
 
-  <!-- Hidden measurement wrapper -->
   <div id="measure-wrapper" style="visibility:hidden; position:absolute; left:0; top:0;"></div>
+  <iframe id="slideshowFrame" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; border:none; z-index:5000;"></iframe>
 
   <script>
-    let firstLoad = true;
+  var firstLoad = true;
 
-    let slideX = 0;
-    let slideSpeed = 1.2;   // slide speed
-    let holdTime = 0;    // pause time
+  var slideX = 0;
+  var slideSpeed = 1.2;
+  var holdTime = 0;
 
-    let slidingIn = false;
-    let slidingOut = false;
+  var slidingIn = false;
+  var slidingOut = false;
 
-    async function loadMessages() {
-      const bigLoader = document.querySelector(".ldr");
-      const smallLoader = document.querySelector(".ldr-right");
+  function loadMessages() {
+    var bigLoader = document.querySelector(".ldr");
+    var smallLoader = document.querySelector(".ldr-right");
 
-      const slide = document.getElementById("slide-wrapper");
-      const marquee = document.getElementById("marquee-wrapper");
-      const container = document.getElementById("message-container");
-      const measure = document.getElementById("measure-wrapper");
+    var slide = document.getElementById("slide-wrapper");
+    var marquee = document.getElementById("marquee-wrapper");
+    var container = document.getElementById("message-container");
+    var measure = document.getElementById("measure-wrapper");
 
-      if (firstLoad) bigLoader.style.display = "flex";
-      else smallLoader.style.display = "flex";
+    if (firstLoad) bigLoader.style.display = "flex";
+    else smallLoader.style.display = "flex";
 
-      const res = await fetch("https://script.google.com/macros/s/AKfycbzGuAd-V1JzOXNZdT_WBQLndVp8UI_N4h3X4-D5HS5IRj-PzNIIJrAhHstGwcBL1lcrdw/exec?d=get");
-      const data = await res.json();
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET",
+      "https://script.google.com/macros/s/AKfycbzGuAd-V1JzOXNZdT_WBQLndVp8UI_N4h3X4-D5HS5IRj-PzNIIJrAhHstGwcBL1lcrdw/exec?d=get",
+      true
+    );
 
-      measure.innerHTML = "";
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status !== 200) return;
 
-      let currentColumn = document.createElement("div");
-      currentColumn.className = "column";
-      measure.appendChild(currentColumn);
+        var data;
+        try { data = JSON.parse(xhr.responseText); }
+        catch (e) { return; }
 
-      let currentHeight = 0;
-      const maxHeight = container.clientHeight;
+        measure.innerHTML = "";
 
-      data.approved.slice().reverse().forEach(row => {
-        const msg = document.createElement("div");
-        msg.className = "msg";
-        msg.textContent = row[0];
+        var currentColumn = document.createElement("div");
+        currentColumn.className = "column";
+        measure.appendChild(currentColumn);
 
-        measure.appendChild(msg);
-        const msgHeight = msg.offsetHeight + 40;
-        measure.removeChild(msg);
+        var currentHeight = 0;
+        var maxHeight = container.clientHeight;
 
-        if (currentHeight + msgHeight > maxHeight) {
-          currentColumn = document.createElement("div");
-          currentColumn.className = "column";
-          measure.appendChild(currentColumn);
-          currentHeight = 0;
+        var msgs = data.approved.slice().reverse();
+
+        for (var i = 0; i < msgs.length; i++) {
+          var msg = document.createElement("div");
+          msg.className = "msg";
+          msg.textContent = msgs[i][0];
+
+          measure.appendChild(msg);
+          var msgHeight = msg.offsetHeight + 40;
+          measure.removeChild(msg);
+
+          if (currentHeight + msgHeight > maxHeight) {
+            currentColumn = document.createElement("div");
+            currentColumn.className = "column";
+            measure.appendChild(currentColumn);
+            currentHeight = 0;
+          }
+
+          currentColumn.appendChild(msg);
+          currentHeight += msgHeight;
         }
 
-        currentColumn.appendChild(msg);
-        currentHeight += msgHeight;
-      });
+        measure.offsetWidth;
 
-      void measure.offsetWidth;
+        var contentHeight = measure.offsetHeight;
+        var contentWidth = measure.scrollWidth;
 
-      const contentHeight = measure.offsetHeight;
-      const contentWidth = measure.scrollWidth;
+        marquee.innerHTML = measure.innerHTML;
 
-      marquee.innerHTML = measure.innerHTML;
+        slide.style.height = (contentHeight + 20) + "px";
+        slide.style.width = contentWidth + "px";
 
-      slide.style.height = (contentHeight + 20) + "px";
-      slide.style.width = contentWidth + "px";
+        slide.offsetWidth;
 
-      void slide.offsetWidth;
-
-      requestAnimationFrame(() => {
-        const containerWidth = container.clientWidth;
-
+        var containerWidth = container.clientWidth;
         slideX = containerWidth;
+
         slide.style.left = slideX + "px";
         slide.style.opacity = "1";
 
         slidingIn = true;
         requestAnimationFrame(stepSlideIn);
-      });
 
-      if (firstLoad) {
-        bigLoader.remove();
-        firstLoad = false;
+        if (firstLoad) {
+          bigLoader.style.display = "none";
+          firstLoad = false;
+        }
+
+        smallLoader.style.display = "none";
       }
+    };
 
-      smallLoader.style.display = "none";
+    xhr.send();
+  }
+
+  function stepSlideIn() {
+    var slide = document.getElementById("slide-wrapper");
+
+    if (!slidingIn) return;
+
+    slideX -= slideSpeed;
+
+    if (slideX <= 0) {
+      slideX = 0;
+      slidingIn = false;
+
+      setTimeout(function () {
+        slidingOut = true;
+        requestAnimationFrame(stepSlideOut);
+      }, holdTime);
+
+      return;
     }
 
-    function stepSlideIn() {
-      const slide = document.getElementById("slide-wrapper");
+    slide.style.left = slideX + "px";
+    requestAnimationFrame(stepSlideIn);
+  }
 
-      if (!slidingIn) return;
+  function stepSlideOut() {
+    var slide = document.getElementById("slide-wrapper");
 
-      slideX -= slideSpeed;
+    if (!slidingOut) return;
 
-      if (slideX <= 0) {
-        slideX = 0;
-        slidingIn = false;
+    slideX -= slideSpeed;
 
-        setTimeout(() => {
-          slidingOut = true;
-          requestAnimationFrame(stepSlideOut);
-        }, holdTime);
-
-        return;
-      }
-
-      slide.style.left = slideX + "px";
-      requestAnimationFrame(stepSlideIn);
+    if (slideX <= -slide.offsetWidth - 40) {
+      slidingOut = false;
+      onMessageCycleComplete();
+      return;
     }
 
-    function stepSlideOut() {
-      const slide = document.getElementById("slide-wrapper");
+    slide.style.left = slideX + "px";
+    requestAnimationFrame(stepSlideOut);
+  }
 
-      if (!slidingOut) return;
-
-      slideX -= slideSpeed;
-
-      if (slideX <= -slide.offsetWidth) {
-        slidingOut = false;
-        loadMessages();
-        return;
-      }
-
-      slide.style.left = slideX + "px";
-      requestAnimationFrame(stepSlideOut);
-    }
-
-    loadMessages();
+  loadMessages();
   </script>
+  <script>
+
+  var SLIDES_VISIBLE_TIME = 27000; 
+  var MSG_CYCLES_BEFORE_SLIDES = 2;
+
+  var slidesId = "19q6v5NqyDLkIB89l-IFuDSy2njVl7bPuESDeXtLZCCQ"; 
+  var slideDelay = 7000; 
+  var msgCycles = 0;
+  var inSlides = false;
+
+  var iframe = document.getElementById("slideshowFrame");
+  var loader = document.querySelector(".ldr");
+
+  var card1 = document.querySelector(".card");
+  var card2 = document.querySelector(".card2");
+
+  (function loadSlidesConfig() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET",
+        "https://script.google.com/macros/s/AKfycbzPCFNBl_TqMUUmJDVrYx4KRDi-rHoQqznX_Eqgdz72PfOEpIVmJ0koAB4FLQ21v8sfGg/exec",
+        true
+      );
+
+      xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+              try {
+                  var cfg = JSON.parse(xhr.responseText);
+                  if (cfg.slideshowId) slidesId = cfg.slideshowId;
+                  if (cfg.slideDelay) slideDelay = cfg.slideDelay;
+              } catch(e){}
+          }
+      };
+
+      xhr.send();
+  })();
+
+  function buildSlidesURL() {
+      return "https://docs.google.com/presentation/d/" +
+          slidesId +
+          "/embed?start=true&loop=true&delayms=" + slideDelay +
+          "&rm=minimal&cb=" + Date.now();
+  }
+
+  function onMessageCycleComplete() {
+      if (inSlides) return;
+
+      msgCycles++;
+
+      if (msgCycles >= MSG_CYCLES_BEFORE_SLIDES) {
+          showSlidesSegment();
+      } else {
+          loadMessages();
+      }
+  }
+
+  function showSlidesSegment() {
+      inSlides = true;
+      msgCycles = 0;
+
+      card1.style.display = "none";
+      card2.style.display = "none";
+
+
+      loader.style.display = "flex";
+
+      iframe.style.display = "none";
+
+      iframe.src = buildSlidesURL();
+
+      iframe.onload = function () {
+          loader.style.display = "none";
+          iframe.style.display = "block";
+
+          setTimeout(function () {
+              iframe.style.display = "none";
+              card1.style.display = "flex";
+              card2.style.display = "flex";
+              inSlides = false;
+              loadMessages();
+          }, SLIDES_VISIBLE_TIME);
+      };
+  }
+  </script>
+
+
 
 </body>
 </html>
